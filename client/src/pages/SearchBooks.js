@@ -1,3 +1,6 @@
+// Use Apollo useMutation() Hook to execute SAVE_BOOK mutation in the handleSaveBook function instead of the saveBook() function imported from API file
+// Saving book's ID to state needs to stay in the try . . . catch block!
+
 import React, { useState, useEffect } from "react";
 import {
   Jumbotron,
@@ -9,21 +12,22 @@ import {
   CardColumns,
 } from "react-bootstrap";
 
-import Auth from "../utils/auth";
-import { searchGoogleBooks } from "../utils/API";
-import { saveBookIds, getSavedBookIds } from "../utils/localStorage";
+import { handleSaveBook } from "@apollo/client";
 import { SAVE_BOOK } from "../utils/mutations";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/react-hooks";
+
+import Auth from "../utils/auth";
+import { saveBook, searchGoogleBooks } from "../utils/API";
+import { saveBookIds, getSavedBookIds } from "../utils/localStorage";
 
 const SearchBooks = () => {
+  const [saveBook, { error }] = useMutation(SAVE_BOOK);
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
   const [searchInput, setSearchInput] = useState("");
-
   // create state to hold saved bookId values
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
-  const [addBook, { error, data }] = useMutation(SAVE_BOOK);
 
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
@@ -76,9 +80,12 @@ const SearchBooks = () => {
     }
 
     try {
-      const { data } = await addBook({
-        variables: { book: bookToSave },
-      });
+      const response = await saveBook(bookToSave, token);
+
+      if (!response.ok) {
+        throw new Error("something went wrong!");
+      }
+
       // if book successfully saves to user's account, save book id to state
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
@@ -140,8 +147,7 @@ const SearchBooks = () => {
                         (savedBookId) => savedBookId === book.bookId
                       )}
                       className="btn-block btn-info"
-                      onClick={() => handleSaveBook(book.bookId)}
-                    >
+                      onClick={() => handleSaveBook(book.bookId)}>
                       {savedBookIds?.some(
                         (savedBookId) => savedBookId === book.bookId
                       )

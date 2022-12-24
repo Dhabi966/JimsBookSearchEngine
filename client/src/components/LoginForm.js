@@ -1,20 +1,23 @@
 // see SignupForm.js for comments
 import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
-
-import Auth from "../utils/auth";
 import { useMutation } from "@apollo/client";
 import { LOGIN_USER } from "../utils/mutations";
+import Auth from "../utils/auth";
 
 const LoginForm = () => {
-  const [userFormData, setUserFormData] = useState({ email: "", password: "" });
+  const [formState, setFormState] = useState({ email: "", password: "" });
+  const [login, { error }] = useMutation(LOGIN_USER);
   const [validated] = useState(false);
-  const [_, setShowAlert] = useState(false);
-  const [login, { error, data }] = useMutation(LOGIN_USER);
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setUserFormData({ ...userFormData, [name]: value });
+
+    setFormState({
+      ...formState,
+      [name]: value,
+    });
   };
 
   const handleFormSubmit = async (event) => {
@@ -28,31 +31,37 @@ const LoginForm = () => {
     }
 
     try {
-      const { data } = await login({
-        variables: { ...userFormData },
-      });
+      const response = await loginUser(userFormData);
 
-      Auth.login(data.login.token);
+      if (!response.ok) {
+        throw new Error("something went wrong!");
+      }
 
-      setUserFormData({
-        username: "",
-        email: "",
-        password: "",
-      });
-    } catch (e) {
-      console.error(e);
+      const { token, user } = await response.json();
+      console.log(user);
+      Auth.login(token);
+    } catch (err) {
+      console.error(err);
       setShowAlert(true);
     }
+
+    setUserFormData({
+      username: "",
+      email: "",
+      password: "",
+    });
   };
 
   return (
     <>
       <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
-        {error && (
-          <Alert dismissible variant="danger">
-            {error.message}
-          </Alert>
-        )}
+        <Alert
+          dismissible
+          onClose={() => setShowAlert(false)}
+          show={showAlert}
+          variant="danger">
+          Something went wrong with your login credentials!
+        </Alert>
         <Form.Group>
           <Form.Label htmlFor="email">Email</Form.Label>
           <Form.Control
@@ -85,8 +94,7 @@ const LoginForm = () => {
         <Button
           disabled={!(userFormData.email && userFormData.password)}
           type="submit"
-          variant="success"
-        >
+          variant="success">
           Submit
         </Button>
       </Form>
