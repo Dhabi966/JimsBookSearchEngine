@@ -4,6 +4,8 @@ import { Jumbotron, Container, Col, Form, Button, Card, CardColumns } from 'reac
 import Auth from '../utils/auth';
 import { saveBook, searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
+import { useMutation } from '@apollo/client';
+import { SAVE_BOOK } from '../graphql/mutations';
 
 const SearchBooks = () => {
   // create state for holding returned google api data
@@ -64,6 +66,24 @@ const SearchBooks = () => {
       return false;
     }
 
+     // use the useMutation hook to call the SAVE_BOOK mutation
+  const [saveBookMutation, { data, loading, error }] = useMutation(SAVE_BOOK);
+
+  // define variables to pass to the mutation as arguments
+  const variables = {
+    input: {
+      bookId: bookToSave.bookId,
+      authors: bookToSave.authors,
+      title: bookToSave.title,
+      description: bookToSave.description,
+      image: bookToSave.image
+    },
+    token
+  };
+      // call the saveBookMutation function with the variables as an argument
+      saveBookMutation({ variables });
+};
+  };
     try {
       const response = await saveBook(bookToSave, token);
 
@@ -76,7 +96,6 @@ const SearchBooks = () => {
     } catch (err) {
       console.error(err);
     }
-  };
 
   return (
     <>
@@ -140,6 +159,5 @@ const SearchBooks = () => {
       </Container>
     </>
   );
-};
 
 export default SearchBooks;
