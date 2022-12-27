@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
+import { useMutation } from '@apollo/client';
 import { ADD_USER } from '../utils/mutations';
 import Auth from '../utils/auth';
 
@@ -12,8 +11,17 @@ const SignupForm = () => {
   const [validated] = useState(false);
   // set state for alert
   const [showAlert, setShowAlert] = useState(false);
-  // create the ADD_USER mutation
-  const [addUser] = useMutation(ADD_USER);
+
+  // set addUser mutation
+  const [addUser, { error }] = useMutation(ADD_USER);
+
+  useEffect(() => {
+    if (error) {
+      setShowAlert(true);
+    } else {
+      setShowAlert(false);
+    }
+  }, [error]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -31,17 +39,21 @@ const SignupForm = () => {
     }
 
     try {
-      // execute the ADD_USER mutation
+      console.log("userformData is ")
+      console.log(userFormData)
       const { data } = await addUser({
-        variables: { input: userFormData },
+        variables: { ...userFormData },
       });
+      console.log("the token is")
+      console.log(data.addUser.token)
+      Auth.login(data.addUser.token)
 
-      // get the token and user data from the mutation result
-      const { token, user } = data.addUser;
-      console.log(user);
-      // log the user in with the token
-      Auth.login(token);
+
+      // const { token, user } = await response.json();
+      // console.log(user);
+      // Auth.login(token);
     } catch (err) {
+      console.log("inside of catch block")
       console.error(err);
       setShowAlert(true);
     }
@@ -59,7 +71,7 @@ const SignupForm = () => {
       <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
         {/* show alert if server response is bad */}
         <Alert dismissible onClose={() => setShowAlert(false)} show={showAlert} variant='danger'>
-          Something went wrong with your signup!
+          Something went wrong with your signup
         </Alert>
 
         <Form.Group>
@@ -72,7 +84,7 @@ const SignupForm = () => {
             value={userFormData.username}
             required
           />
-          <Form.Control.Feedback type='invalid'>Username is required!</Form.Control.Feedback>
+          <Form.Control.Feedback type='invalid'>Username is required</Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group>
@@ -98,7 +110,7 @@ const SignupForm = () => {
             value={userFormData.password}
             required
           />
-          <Form.Control.Feedback type='invalid'>Password is required!</Form.Control.Feedback>
+          <Form.Control.Feedback type='invalid'>Password is required</Form.Control.Feedback>
         </Form.Group>
         <Button
           disabled={!(userFormData.username && userFormData.email && userFormData.password)}

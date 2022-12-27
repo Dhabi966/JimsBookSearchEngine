@@ -1,43 +1,50 @@
-const express = require("express");
+// import express
+const express = require('express');
+// import Apollo Server
+const { ApolloServer } = require('apollo-server-express');
+// import typeDefs and resolvers from schema folder
+const { typeDefs, resolvers } = require('./schemas')
+console.log("schema's imported")
+// const { ApolloServerPluginLandingPageGraphQLPlayground } = require('apollo-server-core');
+const path = require('path');
+const db = require('./config/connection');
 
-// Import ApolloServer
-const { ApolloServer } = require("apollo-server-express");
-// Import the typeDefs and resolvers
-const { typeDefs, resolvers } = require("./schemas");
-const db = require("./config/connection");
-
-const PORT = process.env.PORT || 3001;
-
-//Now, create a new Apollo server and pass it into the schema data.
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-//const path = require('path');
+//remove this for now
 //const routes = require('./routes');
+const { authMiddleware } = require('./utils/auth');
 
 const app = express();
+const PORT = process.env.PORT || 3001;
 
-// `extended` below is true in the original, but in the example in BCS, it's false.
-app.use(express.urlencoded({ extended: false }));
+// create new Apollo server and pass in schema
+async function startServer() {
+
+const server = new ApolloServer({ 
+  typeDefs, 
+  resolvers, 
+  context: authMiddleware, 
+  // plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+  // playground: true
+});
+await server.start();
+//adding Apollo server middlewear here
+server.applyMiddleware({ app });
+
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Create a new instance of an Apollo server with the GraphQL schema
-const startApolloServer = async (typeDefs, resolvers) => {
-  await server.start();
-  //integrate Apollo server with Express application as middleware.
-  server.applyMiddleware({ app });
+// if we're in production, serve client/build as static assets
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+}
 
-  db.once("open", () => {
-    app.listen(PORT, () => {
-      console.log(`🌍 Now listening on localhost:${PORT}`);
-      //log where we can go to test our GQL API
-      console.log(
-        `Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`
-      );
-    });
-  });
-};
-// Calls the async function to start the server:
-startApolloServer(typeDefs, resolvers);
+
+db.once('open', () => {
+  app.listen(PORT, () => console.log(`🌍 Now listening on localhost:${PORT}`));
+});
+
+process.on
+
+}
+
+startServer();
