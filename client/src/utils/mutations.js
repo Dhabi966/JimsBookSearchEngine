@@ -44,6 +44,25 @@ export const ADD_USER = gql`
   }
 `;
 
+export const GET_ME = gql`
+  query getMe {
+    me {
+      _id
+      username
+      email
+      bookCount
+      savedBooks {
+        bookId
+        title
+        authors
+        description
+        image
+        link
+      }
+    }
+  }
+`;
+
 export const SAVE_BOOK = gql`
   mutation saveBook($book: Book!) {
     saveBook(book: $book) {
