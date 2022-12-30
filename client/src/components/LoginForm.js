@@ -1,4 +1,3 @@
-// see SignupForm.js for comments
 import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
 
@@ -9,8 +8,8 @@ import { LOGIN_USER } from "../utils/mutations";
 const LoginForm = () => {
   const [userFormData, setUserFormData] = useState({ email: "", password: "" });
   const [validated] = useState(false);
-  const [_, setShowAlert] = useState(false);
-  const [login, { error, data }] = useMutation(LOGIN_USER);
+  const [showAlert, setShowAlert] = useState(false); // changed _ to showAlert
+  const [login, { error }] = useMutation(LOGIN_USER); // removed data
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -48,9 +47,9 @@ const LoginForm = () => {
   return (
     <>
       <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
-        {error && (
+        {showAlert && error (
           <Alert dismissible variant="danger">
-            {error.message}
+            There was an error logging in. Please try again.
           </Alert>
         )}
         <Form.Group>
