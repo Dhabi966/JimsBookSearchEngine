@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@apollo/client";
+import React, { useState, useEffect } from "react";
 import {
   Jumbotron,
   Container,
@@ -8,19 +7,34 @@ import {
   Button,
 } from "react-bootstrap";
 
+import Auth from "../utils/auth";
+import { removeBookId } from "../utils/localStorage";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import { GET_ME } from "../utils/queries";
 import { REMOVE_BOOK } from "../utils/mutations";
 
-import Auth from "../utils/auth";
-import { removeBookId } from "../utils/localStorage";
-
 const SavedBooks = () => {
-  // execute the GET_ME query and save the result to the userData variable
   const [userData, setUserData] = useState({});
-  const { data: loading, error } = useQuery(GET_ME);
+  //const [userInfo, setUserInfo] = useState({});
+  const { loading } = useQuery(GET_ME, {
+    onCompleted: (dt) => {
+      setUserData(dt.me);
+    },
+  });
 
-  // create the REMOVE_BOOK mutation
-  const [removeBook] = useMutation(REMOVE_BOOK);
+  const [removeBook, { removeBookError, removeBookData }] =
+    useMutation(REMOVE_BOOK);
+  if (!Auth.loggedIn()) {
+    return <h1>Please login to save books</h1>;
+  }
+
+  // if data isn't here yet, say so
+  if (loading) {
+    return <h2>LOADING...</h2>;
+  }
+
+  // use this to determine if `useEffect()` hook needs to run again
+  const userDataLength = Object.keys(userData).length;
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
@@ -31,24 +45,22 @@ const SavedBooks = () => {
     }
 
     try {
-      // execute the REMOVE_BOOK mutation
       const { data } = await removeBook({
-        variables: { bookId },
+        variables: { bookId: bookId },
       });
 
-      // update the user data with the updated saved books list
-      setUserData({ ...userData, savedBooks: data.removeBook });
-      // upon success, remove book's id from local storage
+      console.log("remove bookk", data);
+      setUserData(data.removeBook);
       removeBookId(bookId);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // if the query is still loading, display a loading message
-  if (loading) return <h2>LOADING...</h2>;
-  // if there was an error executing the query, display an error message
-  if (error) return <h2>ERROR</h2>;
+  // if data isn't here yet, say so
+  if (!userDataLength) {
+    return <h2>LOADING...</h2>;
+  }
 
   return (
     <>
