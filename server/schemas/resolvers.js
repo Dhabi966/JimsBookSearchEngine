@@ -10,15 +10,6 @@ const resolvers = {
       }
       return await User.findById(context.user._id).populate("savedBooks");
     },
-    savedBooks: async (parent, args, context) => {
-      if (!context.user) {
-        return [];
-      }
-
-      const user = await User.findById(context.user._id).populate("savedBooks");
-
-      return user.savedBooks;
-    },
   },
   Mutation: {
     addUser: async (parent, { username, email, password }) => {
