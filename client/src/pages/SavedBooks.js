@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Jumbotron,
   Container,
@@ -9,34 +9,30 @@ import {
 
 import Auth from "../utils/auth";
 import { removeBookId } from "../utils/localStorage";
-import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
 import { GET_ME } from "../utils/queries";
 import { REMOVE_BOOK } from "../utils/mutations";
 
 const SavedBooks = () => {
   const [userData, setUserData] = useState({});
-  //const [userInfo, setUserInfo] = useState({});
   const { loading } = useQuery(GET_ME, {
     onCompleted: (dt) => {
       setUserData(dt.me);
     },
   });
 
-  const [removeBook, { removeBookError, removeBookData }] =
-    useMutation(REMOVE_BOOK);
+  const [removeBook] = useMutation(REMOVE_BOOK);
+
   if (!Auth.loggedIn()) {
     return <h1>Please login to save books</h1>;
   }
 
-  // if data isn't here yet, say so
   if (loading) {
     return <h2>LOADING...</h2>;
   }
 
-  // use this to determine if `useEffect()` hook needs to run again
   const userDataLength = Object.keys(userData).length;
 
-  // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
@@ -45,11 +41,11 @@ const SavedBooks = () => {
     }
 
     try {
-      const { data } = await removeBook({
+      const result = await removeBook({
         variables: { bookId: bookId },
       });
-
-      console.log("remove bookk", data);
+      const { data } = result;
+      console.log(data);
       setUserData(data.removeBook);
       removeBookId(bookId);
     } catch (err) {
@@ -57,7 +53,6 @@ const SavedBooks = () => {
     }
   };
 
-  // if data isn't here yet, say so
   if (!userDataLength) {
     return <h2>LOADING...</h2>;
   }
@@ -92,6 +87,7 @@ const SavedBooks = () => {
                   <Card.Title>{book.title}</Card.Title>
                   <p className="small">Authors: {book.authors}</p>
                   <Card.Text>{book.description}</Card.Text>
+
                   <Button
                     className="btn-block btn-danger"
                     onClick={() => handleDeleteBook(book.bookId)}
