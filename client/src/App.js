@@ -6,7 +6,7 @@ import {
   createHttpLink,
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import SearchBooks from "./pages/SearchBooks";
 import SavedBooks from "./pages/SavedBooks";
 import Navbar from "./components/Navbar";
@@ -39,18 +39,17 @@ function App() {
   return (
     <ApolloProvider client={client}>
       <Router>
-        <>
-          <Navbar />
-          <Route exact path="/" component={SearchBooks} />
-          <Route path="/saved" component={SavedBooks} />
-          <Route
-            path="*"
-            component={() => <h1 className="display-2">Wrong page!</h1>}
-          />
-        </>
+        <Navbar />
+        <Routes>
+          <Route exact path="/" element={<SearchBooks />} />
+          <Route path="/saved" element={<SavedBooks />} />
+          <Route path="*" element={<h1 className="display-2">Wrong page!</h1>} />
+        </Routes>
       </Router>
     </ApolloProvider>
   );
 }
 
+
 export default App;
+
