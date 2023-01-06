@@ -37,5 +37,5 @@ WHEN you click on the Logout button, THEN you are logged out of the site and pre
 
 [Deployed App Link](https://jimsbooksearchengine.herokuapp.com/)
 
-[Deployed Repo Link](https://github.com/Dhabi966/JimsBookSearchEngine)
+[Repo Link](https://github.com/Dhabi966/JimsBookSearchEngine)
 
