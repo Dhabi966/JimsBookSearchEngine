@@ -1,4 +1,4 @@
-# Jims Book Search Enging
+# Jims Book Search Engine
 
 ## About Module 21 Challenge - MERN
 
