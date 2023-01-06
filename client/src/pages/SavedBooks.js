@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Jumbotron,
   Container,
@@ -12,43 +12,23 @@ import { removeBookId } from "../utils/localStorage";
 import { useQuery, useMutation } from "@apollo/client";
 import { GET_ME } from "../utils/queries";
 import { REMOVE_BOOK } from "../utils/mutations";
-import { getMe } from '../utils/API';
+
 
 const SavedBooks = () => {
   const [userData, setUserData] = useState({});
-  // const { loading } = useQuery(GET_ME, {
-  //   onCompleted: (dt) => {
-  //     setUserData(dt.me);
-  //   },
-  // });
+  const { data, loading } = useQuery(GET_ME);
 
-  // const [removeBook] = useMutation(REMOVE_BOOK);
+  const [removeBook] = useMutation(REMOVE_BOOK);
 
-  // if (!Auth.loggedIn()) {
-  //   return <h1>Please login to save books</h1>;
-  // }
+  if (!Auth.loggedIn()) {
+    return <h1>Please login to save books</h1>;
+  }
 
-  // if (loading) {
-  //   return <h2>LOADING...</h2>;
-  // }
+  if (loading) {
+    return <h2>LOADING...</h2>;
+  }
 
-  const userDataLength = Object.keys(userData).length;
-  useEffect(()=> {
-    const userData = async () => {
-      try {
-        const token = Auth.loggedIn() ? Auth.getToken() : null;
-        if (!token) {
-          return false;
-        }
-        const response = await getMe(token);
-        const user = await response.json();
-        setUserData(user)
-      } catch(err) {
-        console.log (err)
-      }
-    }
-    userData();
-  }, [userDataLength]) 
+  setUserData(data.me);
 
   const handleDeleteBook = async (bookId) => {
     const token = Auth.loggedIn() ? Auth.getToken() : null;
@@ -57,22 +37,20 @@ const SavedBooks = () => {
       return false;
     }
 
-    // try {
-    //   const result = await removeBook({
-    //     variables: { bookId: bookId },
-    //   });
-    //   const { data } = result;
-    //   console.log(data);
-    //   setUserData(data.removeBook);
-    //   removeBookId(bookId);
-    // } catch (err) {
-    //   console.error(err);
-    // }
+    try {
+      const result = await removeBook({
+        variables: { bookId: bookId },
+      });
+      const { data } = result;
+      console.log(data);
+      const updatedUserData = {...userData};
+      updatedUserData.savedBooks = updatedUserData.savedBooks.filter(book => book.bookId !== bookId);
+      setUserData(updatedUserData);
+      removeBookId(bookId);
+    } catch (err) {
+      console.error(err);
+    }
   };
-
-  if (!userDataLength) {
-    return <h2>LOADING...</h2>;
-  }
 
   return (
     <>
@@ -99,17 +77,17 @@ const SavedBooks = () => {
                     alt={`The cover for ${book.title}`}
                     variant="top"
                   />
-                ) : null}
-                <Card.Body>
-                  <Card.Title>{book.title}</Card.Title>
-                  <p className="small">Authors: {book.authors}</p>
-                  <Card.Text>{book.description}</Card.Text>
-
-                  <Button
-                    className="btn-block btn-danger"
-                    onClick={() => handleDeleteBook(book.bookId)}
+                  ) : null}
+                  <Card.Body>
+                    <Card.Title>{book.title}</Card.Title>
+                    <p className="small">Authors: {book.authors}</p>
+                    <Card.Text>{book.description}</Card.Text>
+  
+                    <Button
+                      className="btn-block btn-danger"
+                      onClick={() => handleDeleteBook(book.bookId)}
                   >
-                    Delete this Book!
+                     Delete this Book!
                   </Button>
                 </Card.Body>
               </Card>
@@ -122,3 +100,4 @@ const SavedBooks = () => {
 };
 
 export default SavedBooks;
+
