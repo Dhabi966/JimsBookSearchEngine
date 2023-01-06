@@ -14,7 +14,9 @@ import Navbar from "./components/Navbar";
 // Construct our main GraphQL API endpoint
 const httpLink = createHttpLink({
   uri: "http://localhost:3001/graphql",//may need to change back to "/graphql" for deployment
+  uri: "http://localhost:3001/graphql",//use for local development
 });
+
 
 // Construct request middleware that will attach the JWT token to every request as an `authorization` header
 const authLink = setContext((_, { headers }) => {
